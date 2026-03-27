@@ -324,7 +324,14 @@ Difficulté : Moyenne (~2 heures)
 * last_backup_file : nom du dernier backup présent dans /backup
 * backup_age_seconds : âge du dernier backup
 
-*..**Déposez ici une copie d'écran** de votre réussite..*
+La route GET `/status` a été ajoutée dans `app/app.py`. Elle affiche en JSON :
+- `count` : nombre d'événements en base
+- `last_backup_file` : nom du dernier backup présent dans `/backup`
+- `backup_age_seconds` : âge du dernier backup en secondes
+
+![Route status](status_screenshot.png)
+
+
 
 ---------------------------------------------------
 ### **Atelier 2 : Choisir notre point de restauration**  
