@@ -337,7 +337,92 @@ La route GET `/status` a été ajoutée dans `app/app.py`. Elle affiche en JSON 
 ### **Atelier 2 : Choisir notre point de restauration**  
 Aujourd’hui nous restaurobs “le dernier backup”. Nous souhaitons **ajouter la capacité de choisir un point de restauration**.
 
-*..Décrir ici votre procédure de restauration (votre runbook)..*  
+#### Runbook — Restauration à un point de sauvegarde spécifique
+
+**Objectif :** Restaurer la base de données SQLite à partir d'un backup précis plutôt que le dernier backup automatique.
+
+---
+
+**Étape 1 — Lister les backups disponibles**
+```bash
+kubectl -n pra run debug-backup \
+  --rm -it --image=alpine \
+  --overrides='{"spec":{"containers":[{"name":"debug","image":"alpine","command":["sh"],"stdin":true,"tty":true,"volumeMounts":[{"name":"backup","mountPath":"/backup"}]}],"volumes":[{"name":"backup","persistentVolumeClaim":{"claimName":"pra-backup"}}]}}'
+```
+Puis dans le shell alpine :
+```bash
+ls -lht /backup
+exit
+```
+Noter le nom du fichier souhaité, ex: `app-1774601221.db`
+
+---
+
+**Étape 2 — Arrêter l'application et suspendre les backups**
+```bash
+kubectl -n pra scale deployment flask --replicas=0
+kubectl -n pra patch cronjob sqlite-backup -p '{"spec":{"suspend":true}}'
+kubectl -n pra delete job --all
+```
+
+---
+
+**Étape 3 — Supprimer et recréer le PVC pra-data vide**
+```bash
+kubectl -n pra delete pvc pra-data
+kubectl apply -f k8s/
+```
+
+---
+
+**Étape 4 — Modifier le fichier de restauration avec le backup choisi**
+```bash
+# Remplacer REMPLACER_PAR_NOM_DU_FICHIER.db par le nom choisi à l'étape 1
+# Exemple : app-1774601221.db
+sed -i 's/REMPLACER_PAR_NOM_DU_FICHIER.db/app-1774601221.db/' \
+  pra/51-job-restore-custom.yaml
+```
+
+---
+
+**Étape 5 — Lancer la restauration**
+```bash
+kubectl apply -f pra/51-job-restore-custom.yaml
+kubectl -n pra wait --for=condition=complete job/sqlite-restore-custom --timeout=60s
+kubectl -n pra logs job/sqlite-restore-custom
+```
+
+---
+
+**Étape 6 — Relancer l'application**
+```bash
+kubectl -n pra scale deployment flask --replicas=1
+kubectl -n pra patch cronjob sqlite-backup -p '{"spec":{"suspend":false}}'
+pkill -f "port-forward" 2>/dev/null
+sleep 2
+kubectl -n pra port-forward svc/flask 8080:80 >/tmp/web.log 2>&1 &
+```
+
+---
+
+**Étape 7 — Vérifier la restauration**
+```bash
+curl http://localhost:8080/count
+curl http://localhost:8080/consultation
+curl http://localhost:8080/status
+```
+
+---
+
+**Points d'attention**
+- Toutes les données écrites **après** le point choisi seront perdues
+- Toujours documenter la raison du choix dans un ticket
+- Ne pas oublier de remettre le fichier `51-job-restore-custom.yaml` à son état initial après restauration :
+```bash
+sed -i 's/app-1774601221.db/REMPLACER_PAR_NOM_DU_FICHIER.db/' \
+  pra/51-job-restore-custom.yaml
+git checkout pra/51-job-restore-custom.yaml
+```
   
 ---------------------------------------------------
 Evaluation
