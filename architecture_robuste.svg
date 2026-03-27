@@ -1,0 +1,96 @@
+<svg width="680" height="780" viewBox="0 0 680 780" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="#666" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+
+  <!-- ZONE A -->
+  <rect x="20" y="40" width="290" height="430" rx="16" fill="#EEF4FF" stroke="#185FA5" stroke-width="1.5" stroke-dasharray="7 4"/>
+  <text x="165" y="65" text-anchor="middle" font-family="Arial" font-size="13" font-weight="bold" fill="#185FA5">Zone A — Production</text>
+
+  <!-- Ingress -->
+  <rect x="55" y="78" width="220" height="48" rx="8" fill="#B5D4F4" stroke="#185FA5" stroke-width="0.8"/>
+  <text x="165" y="98" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#0C447C">Ingress Controller</text>
+  <text x="165" y="116" text-anchor="middle" font-family="Arial" font-size="10" fill="#185FA5">TLS / HTTPS</text>
+
+  <!-- App Flask -->
+  <rect x="55" y="148" width="220" height="70" rx="8" fill="#CECBF6" stroke="#534AB7" stroke-width="0.8"/>
+  <text x="165" y="172" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#26215C">App Flask</text>
+  <text x="165" y="190" text-anchor="middle" font-family="Arial" font-size="10" fill="#3C3489">3 réplicas (replicas: 3)</text>
+  <text x="165" y="206" text-anchor="middle" font-family="Arial" font-size="10" fill="#3C3489">Load balancé automatiquement</text>
+
+  <!-- PostgreSQL primary -->
+  <rect x="55" y="242" width="220" height="60" rx="8" fill="#9FE1CB" stroke="#0F6E56" stroke-width="0.8"/>
+  <text x="165" y="267" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#04342C">PostgreSQL primary</text>
+  <text x="165" y="285" text-anchor="middle" font-family="Arial" font-size="10" fill="#085041">CloudNativePG</text>
+
+  <!-- PVC Longhorn -->
+  <rect x="55" y="328" width="220" height="60" rx="8" fill="#FAC775" stroke="#854F0B" stroke-width="0.8"/>
+  <text x="165" y="351" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#412402">PVC Longhorn répliqué</text>
+  <text x="165" y="369" text-anchor="middle" font-family="Arial" font-size="10" fill="#633806">Rook/Ceph — multi-nœuds</text>
+
+  <!-- Prometheus -->
+  <rect x="55" y="414" width="220" height="48" rx="8" fill="#F5C4B3" stroke="#993C1D" stroke-width="0.8"/>
+  <text x="165" y="434" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#4A1B0C">Prometheus + Grafana</text>
+  <text x="165" y="450" text-anchor="middle" font-family="Arial" font-size="10" fill="#712B13">Monitoring / Alerting</text>
+
+  <!-- Flèches Zone A -->
+  <line x1="165" y1="126" x2="165" y2="148" stroke="#666" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <line x1="165" y1="218" x2="165" y2="242" stroke="#666" stroke-width="1.2" marker-end="url(#arrow)"/>
+  <line x1="165" y1="302" x2="165" y2="328" stroke="#666" stroke-width="1.2" marker-end="url(#arrow)"/>
+
+  <!-- ZONE B -->
+  <rect x="370" y="40" width="290" height="360" rx="16" fill="#F0FFF8" stroke="#3B6D11" stroke-width="1.5" stroke-dasharray="7 4"/>
+  <text x="515" y="65" text-anchor="middle" font-family="Arial" font-size="13" font-weight="bold" fill="#3B6D11">Zone B — Disaster Recovery</text>
+
+  <!-- App standby -->
+  <rect x="405" y="78" width="220" height="70" rx="8" fill="#D3D1C7" stroke="#5F5E5A" stroke-width="0.8"/>
+  <text x="515" y="100" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#2C2C2A">App Flask (standby)</text>
+  <text x="515" y="118" text-anchor="middle" font-family="Arial" font-size="10" fill="#444441">0 → 3 réplicas au failover</text>
+  <text x="515" y="134" text-anchor="middle" font-family="Arial" font-size="10" fill="#444441">Bascule automatique</text>
+
+  <!-- PostgreSQL replica -->
+  <rect x="405" y="172" width="220" height="60" rx="8" fill="#9FE1CB" stroke="#0F6E56" stroke-width="0.8"/>
+  <text x="515" y="197" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#04342C">PostgreSQL replica</text>
+  <text x="515" y="215" text-anchor="middle" font-family="Arial" font-size="10" fill="#085041">Réplication asynchrone</text>
+
+  <!-- PVC Zone B -->
+  <rect x="405" y="256" width="220" height="60" rx="8" fill="#FAC775" stroke="#854F0B" stroke-width="0.8"/>
+  <text x="515" y="279" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#412402">PVC répliqué</text>
+  <text x="515" y="297" text-anchor="middle" font-family="Arial" font-size="10" fill="#633806">Synchronisé depuis Zone A</text>
+
+  <!-- PagerDuty -->
+  <rect x="405" y="340" width="220" height="48" rx="8" fill="#F5C4B3" stroke="#993C1D" stroke-width="0.8"/>
+  <text x="515" y="360" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#4A1B0C">PagerDuty / OpsGenie</text>
+  <text x="515" y="376" text-anchor="middle" font-family="Arial" font-size="10" fill="#712B13">Alerting + on-call</text>
+
+  <!-- Flèches réplication A -> B -->
+  <path d="M275 183 L405 125" fill="none" stroke="#1D9E75" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#arrow)"/>
+  <text x="340" y="148" text-anchor="middle" font-family="Arial" font-size="10" fill="#1D9E75">réplication async</text>
+  <path d="M275 272 L405 286" fill="none" stroke="#1D9E75" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#arrow)"/>
+
+  <!-- S3 -->
+  <rect x="180" y="530" width="320" height="76" rx="12" fill="#C0DD97" stroke="#3B6D11" stroke-width="0.8"/>
+  <text x="340" y="558" text-anchor="middle" font-family="Arial" font-size="13" font-weight="bold" fill="#173404">Stockage externe S3</text>
+  <text x="340" y="576" text-anchor="middle" font-family="Arial" font-size="10" fill="#27500A">Backups chiffrés + versionnés</text>
+  <text x="340" y="594" text-anchor="middle" font-family="Arial" font-size="10" fill="#27500A">Rétention 24h/horaire — 30j/quotidien</text>
+
+  <!-- Flèches vers S3 -->
+  <path d="M165 388 L165 500 L278 538" fill="none" stroke="#666" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arrow)"/>
+  <path d="M515 316 L515 500 L402 538" fill="none" stroke="#666" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arrow)"/>
+
+  <!-- Légende -->
+  <rect x="20" y="660" width="640" height="100" rx="10" fill="none" stroke="#ccc" stroke-width="0.8"/>
+  <text x="340" y="682" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#333">Légende</text>
+  <line x1="50" y1="710" x2="100" y2="710" stroke="#1D9E75" stroke-width="1.5" stroke-dasharray="5 3"/>
+  <text x="110" y="714" font-family="Arial" font-size="10" fill="#333">Réplication asynchrone (PRA)</text>
+  <line x1="50" y1="735" x2="100" y2="735" stroke="#666" stroke-width="1.5" stroke-dasharray="5 3"/>
+  <text x="110" y="739" font-family="Arial" font-size="10" fill="#333">Sauvegarde externe (S3)</text>
+  <line x1="380" y1="710" x2="430" y2="710" stroke="#666" stroke-width="1.5"/>
+  <text x="440" y="714" font-family="Arial" font-size="10" fill="#333">Flux applicatif (PCA)</text>
+  <rect x="380" y="726" width="14" height="14" rx="3" fill="none" stroke="#185FA5" stroke-width="1.5" stroke-dasharray="4 2"/>
+  <text x="400" y="737" font-family="Arial" font-size="10" fill="#333">Zone Production</text>
+  <rect x="530" y="726" width="14" height="14" rx="3" fill="none" stroke="#3B6D11" stroke-width="1.5" stroke-dasharray="4 2"/>
+  <text x="550" y="737" font-family="Arial" font-size="10" fill="#333">Zone DR</text>
+</svg>

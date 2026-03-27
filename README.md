@@ -231,27 +231,88 @@ Faites preuve de pédagogie et soyez clair dans vos explications et procedures d
 **Exercice 1 :**  
 Quels sont les composants dont la perte entraîne une perte de données ?  
   
-*..Répondez à cet exercice ici..*
+Les composants dont la perte entraîne une perte de données sont :
+
+1. **Le PVC `pra-data`** : C'est le volume persistant qui contient la base de données SQLite en production. Si ce PVC est supprimé ou corrompu sans backup récent, toutes les données écrites depuis le dernier backup sont **définitivement perdues**.
+
+2. **Le PVC `pra-backup`** : Si ce volume est perdu en même temps que `pra-data`, il n'existe plus aucune copie de la base de données → **perte totale et irréversible**.
+
+3. **Le pod Flask seul** : La perte du pod **n'entraîne PAS** de perte de données car l'application est stateless. La BDD est externalisée dans le PVC `pra-data`.
+
+4. **Le nœud Kubernetes** : Si le nœud hébergeant les PVCs tombe définitivement (sans réplication du stockage), les volumes locaux sont perdus.
+
+> **Conclusion :** La seule vraie protection est la sauvegarde régulière dans `pra-backup` et idéalement une réplication vers un stockage externe.
 
 **Exercice 2 :**  
 Expliquez nous pourquoi nous n'avons pas perdu les données lors de la supression du PVC pra-data  
   
-*..Répondez à cet exercice ici..*
+Avant la suppression du PVC `pra-data`, le **CronJob Kubernetes** avait déjà réalisé des **sauvegardes automatiques toutes les minutes** de la base SQLite vers le PVC `pra-backup`.
+
+Lors de la restauration, le job `50-job-restore.yaml` a copié le dernier fichier de sauvegarde depuis `pra-backup` vers le nouveau PVC `pra-data` (vide), reconstituant ainsi la base de données.
+
+**Important :** On n'a pas "récupéré" le PVC `pra-data` (il était définitivement supprimé). On a **reconstruit** une nouvelle base à partir de la sauvegarde. Les données écrites entre le dernier backup et le sinistre sont perdues → c'est le **RPO**.
 
 **Exercice 3 :**  
 Quels sont les RTO et RPO de cette solution ?  
   
-*..Répondez à cet exercice ici..*
+**RPO (Recovery Point Objective)** — Perte de données maximale :
+- Le CronJob tourne **toutes les minutes**
+- En cas de sinistre, on perd au maximum les **60 dernières secondes** de données
+- **RPO ≈ 1 minute**
+
+**RTO (Recovery Time Objective)** — Durée de remise en service :
+
+| Étape | Durée estimée |
+|---|---|
+| Détection du sinistre | 1 à 5 min (manuel) |
+| `kubectl apply -f k8s/` | ~30 secondes |
+| Job de restauration | ~15 secondes |
+| Port-forward + vérification | ~30 secondes |
+| **Total RTO** | **~3 à 10 minutes** |
+
+> **Nuance :** Pour le Scénario 1 (PCA), le RTO est proche de **0** car Kubernetes recrée le pod automatiquement en quelques secondes sans intervention humaine.
+
 
 **Exercice 4 :**  
 Pourquoi cette solution (cet atelier) ne peux pas être utilisé dans un vrai environnement de production ? Que manque-t-il ?   
   
-*..Répondez à cet exercice ici..*
+1. **Pas de réplication géographique** : Les deux PVCs (`pra-data` et `pra-backup`) sont sur le **même cluster, voire le même nœud**. Un sinistre physique (incendie, panne datacenter) détruirait les données ET les backups simultanément.
+
+2. **SQLite n'est pas adapté à la production** : SQLite est une base de données fichier mono-utilisateur. Elle ne supporte pas la haute disponibilité ni les accès concurrents multiples.
+
+3. **Pas de surveillance ni d'alerting** : Aucun système de monitoring (Prometheus, Grafana...) n'alerte en cas de sinistre. La détection est 100% manuelle.
+
+4. **Procédure de restauration manuelle** : Le RTO dépend de la réactivité humaine. En production, cela doit être automatisé.
+
+5. **Pas de test de restauration régulier** : Un backup non testé n'est pas fiable. Il n'existe pas ici de procédure de vérification d'intégrité des sauvegardes.
+
+6. **Pas de versioning des backups** : Si le dernier backup est corrompu, il n'y a pas de backup antérieur accessible facilement.
+
+7. **Single point of failure** : Le cluster K3d est un cluster local mono-datacenter sans redondance réseau ni stockage distribué.
   
 **Exercice 5 :**  
 Proposez une archtecture plus robuste.   
-  
-*..Répondez à cet exercice ici..*
+
+![Architecture robuste](architecture_robuste.png)
+
+**Couche application — Haute disponibilité**
+- Remplacer SQLite par **PostgreSQL** avec réplication (CloudNativePG)
+- Déployer **3 réplicas** du pod applicatif pour absorber les pannes
+- Utiliser un **Ingress Controller** avec TLS pour sécuriser les accès
+
+**Couche stockage — Résilience**
+- **StorageClass répliqué** (Longhorn / Rook-Ceph) — survit à la perte d'un nœud
+- Sauvegardes **chiffrées et versionnées** vers stockage externe (S3, Azure Blob, GCS)
+- Rétention : 24h toutes les heures + 30 jours quotidien
+
+**Couche PRA/PCA**
+- **PCA** : cluster multi-zones, réplication synchrone, failover automatique
+- **PRA** : cluster de secours en région distante, réplication asynchrone
+
+**Observabilité**
+- Monitoring : Prometheus + Grafana
+- Alerting : PagerDuty / OpsGenie
+- Tests de restauration automatiques hebdomadaires
 
 ---------------------------------------------------
 Séquence 6 : Ateliers  
